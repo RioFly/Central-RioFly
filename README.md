@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -37,6 +38,7 @@
             transform: translateX(-50%);
             width: 65px;
             height: auto;
+            opacity: 0.8;
         }
         .menu-btn {
             position: absolute;
@@ -119,21 +121,32 @@
                 return;
             }
 
-            historico.slice().reverse().forEach(function(entrada) {
-                historicoDiv.innerHTML += `
-                    <div class='entrada'>
-                        <strong>Data do Envio:</strong> ${entrada.dataHoraEnvio}<br>
-                        <strong>Comandante:</strong> ${entrada.comandante}<br>
-                        <strong>Data do Voo:</strong> ${entrada.dataVoo}<br>
-                        <strong>Aeronave:</strong> ${entrada.aeronave}<br>
-                        <strong>Horas Totais:</strong> ${entrada.horasTotais}<br>
-                        <strong>Trajeto:</strong> ${entrada.trajeto}<br>
-                        <strong>Tempo de Voo:</strong> ${entrada.tempoVoo}<br>
-                        <strong>Custos:</strong> ${entrada.custos}<br>
-                        <strong>Observações:</strong> ${entrada.observacoes}<br>
+            historico.slice().reverse().forEach(function(entrada, index) {
+                backupDiv.innerHTML += `
+                    <div class='entrada' style='cursor:pointer;' onclick='mostrarDetalhes(${index})'>
+                        <strong>Data do Envio:</strong> ${entrada.dataHoraEnvio}
                     </div>
                 `;
             });
+
+            window.mostrarDetalhes = function(index) {
+                const e = historico[index];
+                backupDiv.innerHTML = `
+                    <h3>Detalhes do Diário</h3>
+                    <div class='entrada'>
+                        <strong>Data do Envio:</strong> ${e.dataHoraEnvio}<br>
+                        <strong>Comandante:</strong> ${e.comandante}<br>
+                        <strong>Data do Voo:</strong> ${e.dataVoo}<br>
+                        <strong>Aeronave:</strong> ${e.aeronave}<br>
+                        <strong>Horas Totais:</strong> ${e.horasTotais}<br>
+                        <strong>Trajeto:</strong> ${e.trajeto}<br>
+                        <strong>Tempo de Voo:</strong> ${e.tempoVoo}<br>
+                        <strong>Custos:</strong> ${e.custos}<br>
+                        <strong>Observações:</strong> ${e.observacoes}<br>
+                    </div>
+                    <button onclick='fecharBackup()' style='margin-top:10px;'>Fechar</button>
+                `;
+            };
         }
             function abrirBackup() {
             let historico = JSON.parse(localStorage.getItem("historico_diario")) || [];
