@@ -43,13 +43,14 @@
         .menu-btn {
             position: absolute;
             top: 25px;
-            left: 90%; transform: translateX(-50%);
+            left: 90%;
+            transform: translateX(-50%);
             font-size: 24px;
             background: none;
             border: none;
             cursor: pointer;
         }
-            #backupModal {
+        #backupModal {
             display: none;
             position: fixed;
             top: 0;
@@ -77,7 +78,7 @@
             padding: 10px;
             border-radius: 5px;
         }
-</style>
+    </style>
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             carregarHistorico();
@@ -121,34 +122,52 @@
                 return;
             }
 
-            historico.slice().reverse().forEach(function(entrada, index) {
-                backupDiv.innerHTML += `
-                    <div class='entrada' style='cursor:pointer;' onclick='mostrarDetalhes(${index})'>
+            historico.slice().reverse().forEach(function(entrada, indexReverso) {
+                let indexOriginal = historico.length - 1 - indexReverso;
+                historicoDiv.innerHTML += `
+                    <div class='entrada' style='cursor:pointer;' onclick='mostrarDetalhes(${indexOriginal})'>
                         <strong>Data do Envio:</strong> ${entrada.dataHoraEnvio}
+                        <button style="float:right; background:#e74c3c; color:white; border:none; padding:2px 6px; border-radius:4px; cursor:pointer;"
+                            onclick="event.stopPropagation(); excluirEntrada(${indexOriginal})">Apagar</button>
                     </div>
                 `;
             });
-
-            window.mostrarDetalhes = function(index) {
-                const e = historico[index];
-                backupDiv.innerHTML = `
-                    <h3>Detalhes do Diário</h3>
-                    <div class='entrada'>
-                        <strong>Data do Envio:</strong> ${e.dataHoraEnvio}<br>
-                        <strong>Comandante:</strong> ${e.comandante}<br>
-                        <strong>Data do Voo:</strong> ${e.dataVoo}<br>
-                        <strong>Aeronave:</strong> ${e.aeronave}<br>
-                        <strong>Horas Totais:</strong> ${e.horasTotais}<br>
-                        <strong>Trajeto:</strong> ${e.trajeto}<br>
-                        <strong>Tempo de Voo:</strong> ${e.tempoVoo}<br>
-                        <strong>Custos:</strong> ${e.custos}<br>
-                        <strong>Observações:</strong> ${e.observacoes}<br>
-                    </div>
-                    <button onclick='fecharBackup()' style='margin-top:10px;'>Fechar</button>
-                `;
-            };
         }
-            function abrirBackup() {
+
+        function mostrarDetalhes(index) {
+            let historico = JSON.parse(localStorage.getItem("historico_diario")) || [];
+            const e = historico[index];
+            let backupDiv = document.getElementById("backupContent");
+
+            backupDiv.innerHTML = `
+                <h3>Detalhes do Diário</h3>
+                <div class='entrada'>
+                    <strong>Data do Envio:</strong> ${e.dataHoraEnvio}<br>
+                    <strong>Comandante:</strong> ${e.comandante}<br>
+                    <strong>Data do Voo:</strong> ${e.dataVoo}<br>
+                    <strong>Aeronave:</strong> ${e.aeronave}<br>
+                    <strong>Horas Totais:</strong> ${e.horasTotais}<br>
+                    <strong>Trajeto:</strong> ${e.trajeto}<br>
+                    <strong>Tempo de Voo:</strong> ${e.tempoVoo}<br>
+                    <strong>Custos:</strong> ${e.custos}<br>
+                    <strong>Observações:</strong> ${e.observacoes}<br>
+                </div>
+                <button onclick='fecharBackup()' style='margin-top:10px;'>Fechar</button>
+            `;
+
+            document.getElementById("backupModal").style.display = "flex";
+        }
+
+        function excluirEntrada(index) {
+            if (confirm("Tem certeza que deseja apagar este diário?")) {
+                let historico = JSON.parse(localStorage.getItem("historico_diario")) || [];
+                historico.splice(index, 1);
+                localStorage.setItem("historico_diario", JSON.stringify(historico));
+                carregarHistorico();
+            }
+        }
+
+        function abrirBackup() {
             let historico = JSON.parse(localStorage.getItem("historico_diario")) || [];
             let backupDiv = document.getElementById("backupContent");
             backupDiv.innerHTML = "<h3>Backup dos Diários Enviados</h3>";
@@ -179,13 +198,12 @@
         function fecharBackup() {
             document.getElementById("backupModal").style.display = "none";
         }
-</script>
+    </script>
 </head>
 <body>
-    <img src="https://media.discordapp.net/attachments/1268995649362333760/1385640335224340571/1750373219340.png?ex=6856cd9f&is=68557c1f&hm=4a5f402a3e5e1314ea0b3fa737dadae930add7bc5311fe0a818f5485e7a1dc1f&=&format=webp&quality=lossless&width=652&height=647" alt="Logo RioFly Aviation" class="logo">
+    <img src="https://media.discordapp.net/attachments/1268995649362333760/1385640335224340571/1750373219340.png" alt="Logo RioFly Aviation" class="logo">
 
-    <!-- Botão de 3 pontinhos -->
-    <button class="menu-btn" title="Menu" onclick="abrirBackup()">≡</button>
+    <button class="menu-btn" title="Menu" onclick="abrirBackup()">&#8801;</button>
 
     <main>
         <h2 style="margin-top: 40px;">Diário de Bordo - RioFly Aviation</h2>
@@ -219,9 +237,9 @@
 
         <div id="historico"></div>
     </main>
+
     <div id="backupModal" onclick="fecharBackup()">
         <div id="backupContent" onclick="event.stopPropagation()">
-            <!-- Conteúdo do backup será carregado aqui -->
             <button onclick="fecharBackup()" style="margin-bottom:10px;">Fechar</button>
         </div>
     </div>
