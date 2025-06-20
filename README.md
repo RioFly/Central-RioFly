@@ -1,3 +1,4 @@
+<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
@@ -68,6 +69,7 @@
                 }
                 snapshot.forEach(function(childSnapshot) {
                     const entrada = childSnapshot.val();
+                    const key = childSnapshot.key;
                     historicoDiv.innerHTML += `
                         <div class='entrada'>
                             <strong>Data do Envio:</strong> ${entrada.dataHoraEnvio}<br>
@@ -75,10 +77,23 @@
                             <strong>Data do Voo:</strong> ${entrada.dataVoo}<br>
                             <strong>Trajeto:</strong> ${entrada.trajeto}<br>
                             <strong>Tempo de Voo:</strong> ${entrada.tempoVoo}<br>
+                            <button onclick="apagarEntrada('${aeronave}', '${key}')" style="background-color:#e74c3c; color:white; margin-top:8px; border:none; padding:6px 10px; border-radius:5px;">Apagar</button>
                         </div>
                     `;
                 });
             });
+        }
+
+        function apagarEntrada(aeronave, key) {
+            if (confirm("Tem certeza que deseja apagar este diário?")) {
+                db.ref("diarios/" + aeronave + "/" + key).remove(function(error) {
+                    if (error) {
+                        alert('Erro ao apagar.');
+                    } else {
+                        carregarHistorico();
+                    }
+                });
+            }
         }
     </script>
 
