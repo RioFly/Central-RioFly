@@ -1,9 +1,87 @@
-<!DOCTYPE html>
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Diário de Bordo - RioFly Aviation</title>
+
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBp-zGlT0absTC1u1yj-Cat_AgKKw5LlBQ",
+            authDomain: "riofly-b8fde.firebaseapp.com",
+            databaseURL: "https://riofly-b8fde-default-rtdb.firebaseio.com",
+            projectId: "riofly-b8fde",
+            storageBucket: "riofly-b8fde.appspot.com",
+            messagingSenderId: "223853711888",
+            appId: "1:223853711888:web:96fe01f8c7baca28a33095"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        function confirmarEnvio() {
+            const campos = ["comandante", "dataVoo", "aeronave", "horasTotais", "trajeto", "tempoVoo", "custos"];
+            for (let id of campos) {
+                if (!document.getElementById(id).value.trim()) {
+                    alert("Por favor, preencha todos os campos obrigatórios.");
+                    return false;
+                }
+            }
+            if (confirm("Tem certeza que deseja enviar este Diário de Bordo?")) {
+                salvarNoFirebase();
+                return false;
+            }
+            return false;
+        }
+
+        function salvarNoFirebase() {
+            const aeronave = document.getElementById("aeronave").value;
+            const novaEntradaRef = db.ref("diarios/" + aeronave).push();
+            novaEntradaRef.set({
+                dataHoraEnvio: new Date().toLocaleString(),
+                comandante: document.getElementById("comandante").value,
+                dataVoo: document.getElementById("dataVoo").value,
+                horasTotais: document.getElementById("horasTotais").value,
+                trajeto: document.getElementById("trajeto").value,
+                tempoVoo: document.getElementById("tempoVoo").value,
+                custos: document.getElementById("custos").value,
+                observacoes: document.getElementById("observacoes").value
+            }, function(error) {
+                if (error) {
+                    alert('Erro ao salvar no Firebase.');
+                } else {
+                    carregarHistorico();
+                }
+            });
+        }
+
+        function carregarHistorico() {
+            const aeronave = document.getElementById("aeronave").value;
+            if (!aeronave) return;
+            db.ref("diarios/" + aeronave).once('value', function(snapshot) {
+                let historicoDiv = document.getElementById("historico");
+                historicoDiv.innerHTML = `<h3>Histórico - ${aeronave}</h3>`;
+                if (!snapshot.exists()) {
+                    historicoDiv.innerHTML += "<p>Nenhum diário enviado ainda para esta aeronave.</p>";
+                    return;
+                }
+                snapshot.forEach(function(childSnapshot) {
+                    const entrada = childSnapshot.val();
+                    historicoDiv.innerHTML += `
+                        <div class='entrada'>
+                            <strong>Data do Envio:</strong> ${entrada.dataHoraEnvio}<br>
+                            <strong>Comandante:</strong> ${entrada.comandante}<br>
+                            <strong>Data do Voo:</strong> ${entrada.dataVoo}<br>
+                            <strong>Trajeto:</strong> ${entrada.trajeto}<br>
+                            <strong>Tempo de Voo:</strong> ${entrada.tempoVoo}<br>
+                        </div>
+                    `;
+                });
+            });
+        }
+    </script>
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -33,18 +111,6 @@
             margin-bottom: 1rem;
             border-radius: 6px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-            position: relative;
-        }
-        .entrada button.apagar {
-            position: absolute;
-            top: 8px;
-            right: 8px;
-            background: #e74c3c;
-            color: white;
-            border: none;
-            padding: 4px 8px;
-            border-radius: 4px;
-            cursor: pointer;
         }
         .menu-btn {
             position: fixed;
@@ -59,150 +125,11 @@
             cursor: pointer;
             z-index: 1000;
         }
-        #backupModal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1001;
-        }
-        #backupContent {
-            background: white;
-            padding: 20px;
-            max-height: 80%;
-            overflow-y: auto;
-            border-radius: 8px;
-            max-width: 90%;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-        }
     </style>
-    <script>
-        document.addEventListener("DOMContentLoaded", function() {
-            carregarHistorico();
-        });
-
-        document.addEventListener("keydown", function(event) {
-            if (event.key === "Escape") {
-                fecharBackup();
-            }
-        });
-
-        function confirmarEnvio() {
-            const campos = ["comandante", "dataVoo", "aeronave", "horasTotais", "trajeto", "tempoVoo", "custos"];
-            for (let id of campos) {
-                if (!document.getElementById(id).value.trim()) {
-                    alert("Por favor, preencha todos os campos obrigatórios.");
-                    return false;
-                }
-            }
-            if (confirm("Tem certeza que deseja enviar este Diário de Bordo?")) {
-                salvarNoHistorico();
-                return true;
-            }
-            return false;
-        }
-
-        function salvarNoHistorico() {
-            const aeronaveSelecionada = document.getElementById("aeronave").value;
-            const chaveHistorico = "historico_diario_" + aeronaveSelecionada;
-            let historico = JSON.parse(localStorage.getItem(chaveHistorico)) || [];
-
-            const entrada = {
-                dataHoraEnvio: new Date().toLocaleString(),
-                comandante: document.getElementById("comandante").value,
-                dataVoo: document.getElementById("dataVoo").value,
-                aeronave: aeronaveSelecionada,
-                horasTotais: document.getElementById("horasTotais").value,
-                trajeto: document.getElementById("trajeto").value,
-                tempoVoo: document.getElementById("tempoVoo").value,
-                custos: document.getElementById("custos").value,
-                observacoes: document.getElementById("observacoes").value
-            };
-
-            historico.push(entrada);
-            localStorage.setItem(chaveHistorico, JSON.stringify(historico));
-            carregarHistorico();
-        }
-
-        function carregarHistorico() {
-            const aeronaveSelecionada = document.getElementById("aeronave").value;
-            if (!aeronaveSelecionada) return;
-
-            const chaveHistorico = "historico_diario_" + aeronaveSelecionada;
-            let historico = JSON.parse(localStorage.getItem(chaveHistorico)) || [];
-            let historicoDiv = document.getElementById("historico");
-            historicoDiv.innerHTML = `<h3>Histórico - ${aeronaveSelecionada}</h3>`;
-
-            if (historico.length === 0) {
-                historicoDiv.innerHTML += "<p>Nenhum envio realizado ainda para esta aeronave.</p>";
-                return;
-            }
-
-            historico.slice().reverse().forEach(function(entrada, indexReverso) {
-                let indexOriginal = historico.length - 1 - indexReverso;
-                historicoDiv.innerHTML += `
-                    <div class='entrada' onclick='mostrarDetalhes("${aeronaveSelecionada}", ${indexOriginal})'>
-                        <strong>Data do Envio:</strong> ${entrada.dataHoraEnvio}
-                        <button class='apagar' onclick="event.stopPropagation(); excluirEntrada('${aeronaveSelecionada}', ${indexOriginal})">Apagar</button>
-                    </div>
-                `;
-            });
-        }
-
-        function mostrarDetalhes(aeronave, index) {
-            const chaveHistorico = "historico_diario_" + aeronave;
-            let historico = JSON.parse(localStorage.getItem(chaveHistorico)) || [];
-            const e = historico[index];
-            let backupDiv = document.getElementById("backupContent");
-
-            backupDiv.innerHTML = `
-                <h3>Detalhes do Diário - ${aeronave}</h3>
-                <div class='entrada'>
-                    <strong>Data do Envio:</strong> ${e.dataHoraEnvio}<br>
-                    <strong>Comandante:</strong> ${e.comandante}<br>
-                    <strong>Data do Voo:</strong> ${e.dataVoo}<br>
-                    <strong>Horas Totais:</strong> ${e.horasTotais}<br>
-                    <strong>Trajeto:</strong> ${e.trajeto}<br>
-                    <strong>Tempo de Voo:</strong> ${e.tempoVoo}<br>
-                    <strong>Custos:</strong> ${e.custos}<br>
-                    <strong>Observações:</strong> ${e.observacoes}<br>
-                </div>
-                <button onclick='fecharBackup()' style='margin-top:10px;'>Fechar</button>
-            `;
-
-            document.getElementById("backupModal").style.display = "flex";
-        }
-
-        function excluirEntrada(aeronave, index) {
-            if (confirm("Tem certeza que deseja apagar este diário?")) {
-                const chaveHistorico = "historico_diario_" + aeronave;
-                let historico = JSON.parse(localStorage.getItem(chaveHistorico)) || [];
-                historico.splice(index, 1);
-                localStorage.setItem(chaveHistorico, JSON.stringify(historico));
-                carregarHistorico();
-            }
-        }
-
-        function abrirBackup() {
-            let backupDiv = document.getElementById("backupContent");
-            backupDiv.innerHTML = "<h3>Selecione uma aeronave para visualizar o histórico.</h3>";
-            document.getElementById("backupModal").style.display = "flex";
-        }
-
-        function fecharBackup() {
-            document.getElementById("backupModal").style.display = "none";
-        }
-    </script>
 </head>
 <body>
-
     <main>
-        <button class="menu-btn" title="Menu" onclick="abrirBackup()">&#8801;</button>
+        <button class="menu-btn" title="Carregar Histórico" onclick="carregarHistorico()">&#8801;</button>
         <h2 style="margin-top: 40px;">Diário de Bordo - RioFly Aviation</h2>
         <form onsubmit="return confirmarEnvio()">
             <label for="comandante">Comandante (Ex: Nome/Cód. IVAO):</label>
@@ -214,7 +141,7 @@
             <label for="aeronave">Aeronave:</label>
             <select id="aeronave" required onchange="carregarHistorico()">
                 <option value="" disabled selected>Selecione a aeronave</option>
-                <option>Robinson R66 PP-JMPB</option>
+                <option>Robinson R66 PP-JMB</option>
                 <option>Robinson R66 PS-JRF</option>
                 <option>Bell 407 PS-RIO</option>
                 <option>AW109 PS-FPS</option>
@@ -245,12 +172,5 @@
 
         <div id="historico"></div>
     </main>
-
-    <div id="backupModal" onclick="fecharBackup()">
-        <div id="backupContent" onclick="event.stopPropagation()">
-            <button onclick="fecharBackup()" style="margin-bottom:10px;">Fechar</button>
-        </div>
-    </div>
-
 </body>
 </html>
