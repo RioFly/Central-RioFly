@@ -6,47 +6,44 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background: linear-gradient(135deg, #e6f0fa, #cfddee);
+            background: linear-gradient(135deg, #e0f7fa, #80deea);
             margin: 0;
             padding: 2rem;
         }
         main {
-            max-width: 600px;
+            max-width: 700px;
             margin: auto;
             background: white;
             padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
         }
         input, button, textarea {
             width: 100%;
-            padding: 0.5rem;
-            margin-top: 0.5rem;
+            padding: 0.75rem;
+            margin-top: 0.75rem;
             box-sizing: border-box;
+            border-radius: 6px;
+            border: 1px solid #ccc;
         }
         .entrada {
-            background: #f2f6fc;
-            padding: 0.8rem;
+            background: #e3f2fd;
+            padding: 1rem;
             margin-bottom: 1rem;
-            border-radius: 5px;
+            border-radius: 6px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
         }
-        .logo {
-            position: absolute;
-            top: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 65px;
-            height: auto;
-            opacity: 0.8;
-        }
+        
         .menu-btn {
             position: absolute;
-            top: 25px;
-            left: 90%;
-            transform: translateX(-50%);
+            top: 5px;
+            right: 0;
             font-size: 24px;
-            background: none;
+            background: #2196f3;
+            color: white;
             border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
             cursor: pointer;
         }
         #backupModal {
@@ -67,6 +64,7 @@
             overflow-y: auto;
             border-radius: 8px;
             max-width: 90%;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
         #backupContent h3 {
             margin-top: 0;
@@ -200,12 +198,13 @@
     </script>
 </head>
 <body>
-    <img src="https://media.discordapp.net/attachments/1268995649362333760/1385640335224340571/1750373219340.png" alt="Logo RioFly Aviation" class="logo">
+    
 
-    <button class="menu-btn" title="Menu" onclick="abrirBackup()">&#8801;</button>
+    
 
     <main>
-        <h2 style="margin-top: 40px;">Diário de Bordo - RioFly Aviation</h2>
+        <button class="menu-btn" title="Menu" onclick="abrirBackup()">&#8801;</button>
+<h2 style="margin-top: 40px;">Diário de Bordo - RioFly Aviation</h2>
         <form onsubmit="return confirmarEnvio()">
             <label for="comandante">Comandante (Ex: Nome/Cód. IVAO):</label>
             <input type="text" id="comandante" required placeholder="Ex: João Silva / BR1234">
@@ -220,7 +219,7 @@
             <input type="text" id="horasTotais" required placeholder="Ex: 1200h">
 
             <label for="trajeto">Trajeto:</label>
-            <input type="text" id="trajeto" required placeholder="Ex: SBJR → SBSP">
+            <input type="text" id="trajeto" required placeholder="Ex: SBJR → SBSP / NM">
 
             <label for="tempoVoo">Tempo de Voo:</label>
             <input type="text" id="tempoVoo" required placeholder="Ex: 2h30min">
@@ -231,7 +230,7 @@
             <label for="observacoes">Observações:</label>
             <textarea id="observacoes" placeholder="Ex: Voo tranquilo, sem intercorrências."></textarea>
 
-            <button type="submit">Enviar Diário de Bordo</button>
+            <button type="submit" style="background-color: #4caf50; color: white; font-weight: bold;">Enviar Diário de Bordo</button>
         </form>
 
         <div id="historico"></div>
