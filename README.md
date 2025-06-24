@@ -51,7 +51,12 @@
                 if (error) {
                     alert('Erro ao salvar no Firebase.');
                 } else {
-                    carregarHistorico();
+                    document.getElementById("mensagemSucesso").innerText = "✅ Diário salvo com sucesso!";
+                    document.getElementById("mensagemSucesso").style.display = "block";
+                    setTimeout(() => {
+                        document.getElementById("mensagemSucesso").style.display = "none";
+                    }, 5000);
+                    carregarHistoricoCompleto();
                 }
             });
         }
@@ -68,18 +73,65 @@
                 }
                 snapshot.forEach(function(childSnapshot) {
                     const entrada = childSnapshot.val();
+                    historicoDiv.innerHTML += `
+                        <div class='entrada'>
+                            <strong>Data:</strong> ${entrada.dataHoraEnvio}<br>
+                            <strong>Comandante:</strong> ${entrada.comandante}<br>
+                            <strong>Trajeto:</strong> ${entrada.trajeto}<br>
+                            <strong>Tempo:</strong> ${entrada.tempoVoo}<br>
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        function carregarHistoricoCompleto() {
+            const aeronave = document.getElementById("aeronave").value;
+            if (!aeronave) return;
+            db.ref("diarios/" + aeronave).once('value', function(snapshot) {
+                let historicoDiv = document.getElementById("historico");
+                historicoDiv.innerHTML = `<h3>Histórico Completo - ${aeronave}</h3>`;
+                if (!snapshot.exists()) {
+                    historicoDiv.innerHTML += "<p>Nenhum diário enviado ainda para esta aeronave.</p>";
+                    return;
+                }
+                let totalVoos = 0;
+                let totalHoras = 0;
+                document.querySelector("form").style.display = "block";
+                snapshot.forEach(function(childSnapshot) {
+                    const entrada = childSnapshot.val();
                     const key = childSnapshot.key;
+                    totalVoos++;
+                    let tempo = entrada.tempoVoo.replace(/[^0-9hmin]/g, "");
+                    let horas = 0;
+                    let minutos = 0;
+                    if (tempo.includes("h")) {
+                        horas = parseInt(tempo.split("h")[0]) || 0;
+                        if (tempo.includes("min")) {
+                            minutos = parseInt(tempo.split("h")[1].replace("min", "")) || 0;
+                        }
+                    } else if (tempo.includes("min")) {
+                        minutos = parseInt(tempo.replace("min", "")) || 0;
+                    }
+                    totalHoras += horas + (minutos / 60);
                     historicoDiv.innerHTML += `
                         <div class='entrada'>
                             <strong>Data do Envio:</strong> ${entrada.dataHoraEnvio}<br>
                             <strong>Comandante:</strong> ${entrada.comandante}<br>
                             <strong>Data do Voo:</strong> ${entrada.dataVoo}<br>
+                            <strong>Horas Totais:</strong> ${entrada.horasTotais}<br>
                             <strong>Trajeto:</strong> ${entrada.trajeto}<br>
                             <strong>Tempo de Voo:</strong> ${entrada.tempoVoo}<br>
+                            <strong>Custos:</strong> ${entrada.custos}<br>
+                            <strong>Observações:</strong> ${entrada.observacoes}<br>
                             <button onclick="apagarEntrada('${aeronave}', '${key}')" style="background-color:#e74c3c; color:white; margin-top:8px; border:none; padding:6px 10px; border-radius:5px;">Apagar</button>
                         </div>
                     `;
                 });
+                historicoDiv.innerHTML = `<h3>Histórico Completo - ${aeronave}</h3>
+                    <p><strong>Total de voos:</strong> ${totalVoos}</p>
+                    <p><strong>Total de horas acumuladas:</strong> ${totalHoras.toFixed(2)} horas</p>
+                ` + historicoDiv.innerHTML;
             });
         }
 
@@ -89,7 +141,7 @@
                     if (error) {
                         alert('Erro ao apagar.');
                     } else {
-                        carregarHistorico();
+                        carregarHistoricoCompleto();
                     }
                 });
             }
@@ -143,7 +195,8 @@
 </head>
 <body>
     <main>
-        <button class="menu-btn" title="Carregar Histórico" onclick="carregarHistorico()">&#8801;</button>
+        <div id="mensagemSucesso" style="display:none; color: green; font-weight: bold; margin-bottom: 1rem;"></div>
+        <button class="menu-btn" title="Ver Histórico Completo" onclick="carregarHistoricoCompleto()">📖 Histórico</button>
         <h2 style="margin-top: 40px;">Diário de Bordo - RioFly Aviation</h2>
         <form onsubmit="return confirmarEnvio()">
             <label for="comandante">Comandante (Ex: Nome/Cód. IVAO):</label>
@@ -155,15 +208,16 @@
             <label for="aeronave">Aeronave:</label>
             <select id="aeronave" required onchange="carregarHistorico()">
                 <option value="" disabled selected>Selecione a aeronave</option>
-                <option>Robinson R66 PP-JMB</option>
-                <option>Robinson R66 PS-JRF</option>
-                <option>Bell 407 PS-RIO</option>
-                <option>AW109 PS-FPS</option>
-                <option>H125 PP-HZB</option>
-                <option>Phenom 100 PP-EMB</option>
-                <option>Phenom 300 PR-NGM</option>
-                <option>Citation CJ3 PS-SCC</option>
-                <option>B200 King Air PR-FVP</option>
+                <option value="Robinson R66 PP-JMB">Robinson R66 PP-JMB</option>
+                <option value="Robinson R66 PS-JRF">Robinson R66 PS-JRF</option>
+                <option value="Bell 407 PS-RIO">Bell 407 PS-RIO</option>
+                <option value="Bell 407 PS-RFL">Bell 407 PS-RFL</option>
+                <option value="H125 PP-HZB">H125 PP-HZB</option>
+                <option value="Phenom 100 PP-EMB">Phenom 100 PP-EMB</option>
+                <option value="Phenom 300 PR-NGM">Phenom 300 PR-NGM</option>
+                <option value="Citation CJ3 PS-SCC">Citation CJ3 PS-SCC</option>
+                <option value="Pilatus PC-12 PR-CBJ">Pilatus PC-12 PR-CBJ</option>
+                <option value="Epic PS-VTT">Epic PS-VTT</option>
             </select>
 
             <label for="horasTotais">Horas Totais da Aeronave:</label>
