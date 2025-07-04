@@ -918,9 +918,6 @@
         historicoDiv.innerHTML = "<p>Você ainda não registrou nenhum voo.</p>";
       }
     }
-
-    // ... (restante do código permanece igual) ...
-
   </script>
 </body>
 </html>
